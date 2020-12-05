@@ -25,28 +25,25 @@ class ModelNet40(Dataset):
         return translated_pointcloud
 
     def download(self):
-        os.system('mkdir -p /tmp/dataset/data')
-        BASE_DIR = os.path.dirname('/tmp/dataset/')
-        # DATA_DIR = os.path.join(BASE_DIR, 'data')
-        DATA_DIR = os.path.dirname('/tmp/dataset/data')
-        # if not os.path.exists(DATA_DIR):
-        #     os.mkdir(DATA_DIR)
+        os.system('mkdir -p ./tmp/data/')
+        DATA_DIR = os.path.dirname('./tmp/data/')
         if not os.path.exists(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048')):
-            www = 'https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip'
-            zipfile = os.path.basename(www)
-            os.system('wget --no-check-certificate %s; unzip %s' % (www, zipfile))
-            os.system('mv %s %s' % (zipfile[:-4], DATA_DIR))
-            os.system('rm %s' % (zipfile))
+            if os.path.exists(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048.zip')):
+                os.system('unzip %s -d %s' % (os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048.zip'), DATA_DIR))
+            else:
+                www = 'https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip'
+                zipfile = os.path.basename(www)
+                os.system('wget --no-check-certificate %s; unzip %s' % (www, zipfile))
+                os.system('mv %s %s' % (zipfile[:-4], DATA_DIR))
+                os.system('rm %s' % (zipfile))
 
     def load_data(self, partition):
         self.download()
-        os.system('mkdir -p /tmp/dataset/data')
-        # BASE_DIR = os.path.dirname('/tmp/dataset/')
-        # DATA_DIR = os.path.join(BASE_DIR, 'data')
-        DATA_DIR = os.path.dirname('/tmp/dataset/data')
+        DATA_DIR = os.path.dirname('./tmp/data/')
         all_data = []
         all_label = []
         for h5_name in glob.glob(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048', 'ply_data_*.h5')):
+
             f = h5py.File(h5_name, 'r')
             data = f['data'][:].astype('float32')
             label = f['label'][:].astype('int64')
@@ -87,3 +84,7 @@ class ModelNet40(Dataset):
 
     def __len__(self):
         return self.data.shape[0]
+
+    @staticmethod
+    def number_classes():
+        return 40

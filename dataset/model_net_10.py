@@ -5,6 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 class ModelNet10(Dataset):
+
     def __init__(self,
                  basedir,
                  num_points,
@@ -43,6 +44,10 @@ class ModelNet10(Dataset):
         data = self.load_point_cloud_from_mesh(self.filepaths[index])
         data = self.normalize_points(data)
         return data, category
+
+    @staticmethod
+    def number_classes():
+        return 10
 
 # data_set = ModelNet10(2048, partition='test')
 # for data, label in data_set:

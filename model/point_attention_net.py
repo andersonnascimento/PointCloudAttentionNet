@@ -1,6 +1,8 @@
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+from utils.utility import get_graph_feature
+from utils.utility import knn
 
 class PointAttentionNet(nn.Module):
     def __init__(self, args):
