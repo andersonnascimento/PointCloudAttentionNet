@@ -23,6 +23,7 @@ from model.dgcnn import DGCNN
 from model.point_attention_net import PointAttentionNet
 from model.point_net import PointNet
 
+from tensorboardX import SummaryWriter
 
 import sklearn.metrics as metrics
 
@@ -35,7 +36,9 @@ def train(args):
     model = params.model(params).to(params.device)
     args.log(str(model),False)
     model = nn.DataParallel(model)
-    print("Let's use", torch.cuda.device_count(), "GPUs!")
+    print("Let's use", torch.cuda.device_count(), "GPUs!") 
+
+    writer = SummaryWriter(args.output_dir)
 
     if args.optimizer == 'SGD':
         print(f"{str(params.model)} use SGD")
@@ -64,6 +67,7 @@ def train(args):
             model.train()
             train_pred = []
             train_true = []
+
             for data, label in train_loader:
                 data, label = data.to(device), label.to(device).squeeze()
                 data = data.permute(0, 2, 1)
@@ -72,6 +76,7 @@ def train(args):
                 logits = model(data)
 
                 loss = criterion(logits, label)
+
                 loss.backward()
                 opt.step()
                 preds = logits.max(dim=1)[1]
@@ -119,15 +124,28 @@ def train(args):
             val_acc = metrics.accuracy_score(val_true, val_pred)
             avg_per_class_acc = metrics.balanced_accuracy_score(val_true, val_pred)
 
+            accuracy = metrics.accuracy_score(train_true, train_pred)
+            balanced_accuracy = metrics.balanced_accuracy_score(train_true, train_pred)
+
+            val_loss = val_loss*1.0/count
+
             args.csv(
                 epoch,
                 train_loss,
-                metrics.accuracy_score(train_true, train_pred),
-                metrics.balanced_accuracy_score(train_true, train_pred),
-                val_loss*1.0/count,
+                accuracy,
+                balanced_accuracy,
+                val_loss,
                 val_acc,
                 avg_per_class_acc,
                 time.time()-ts)
+
+            writer.add_scalar('train/loss', loss, epoch)
+            writer.add_scalar('train/accuracy', accuracy, epoch)
+            writer.add_scalar('train/balanced_accuracy', balanced_accuracy, epoch)
+
+            writer.add_scalar('valid/loss', val_loss, epoch)
+            writer.add_scalar('valid/accuracy', val_acc, epoch)
+            writer.add_scalar('valid/balanced_accuracy', avg_per_class_acc, epoch)
 
             torch.save(model.state_dict(), args.checkpoint_path())
             if avg_per_class_acc > global_best_avg_acc:
