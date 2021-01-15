@@ -32,8 +32,8 @@ def train(args):
     validation_loader = DataLoader(args.dataset_loader(partition='validation', num_points=args.num_points, random_state=args.random_state),
                                    num_workers=8, batch_size=args.test_batch_size, shuffle=True, drop_last=False)
     device = args.device
-    args.log(str(model),False)
     model = params.model(params).to(params.device)
+    args.log(str(model),False)
     model = nn.DataParallel(model)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
 
