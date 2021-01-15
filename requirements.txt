@@ -2,3 +2,5 @@ numpy
 pandas
 pytorch
 open3d
+tensorboardX
+tensorboard
